@@ -1,0 +1,150 @@
+\documentclass[12pt]{article}
+
+%% preamble: Keep it clean; only include those you need
+
+% if the below packages cannot be installed automatically, you can 
+% download the required .sty files from CTAN and place them in the
+% same location as the .tex file (or upload to overleaf in same
+% location (folder) in overleaf
+
+\usepackage{amsmath}
+\usepackage[margin = 1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{natbib}
+
+\usepackage{setspace} % for doublespacing
+\doublespacing
+
+
+% highlighting hyper links
+\usepackage[colorlinks=true, citecolor=blue]{hyperref}
+
+
+\usepackage{color}
+\newcommand{\blue}{\color{blue}} 
+% when you make your edits in response to review/instructor comments, 
+% you can indicate changes in color
+
+%% meta data
+
+\title{Stats Paper on Sigmoid Function}
+\author{Giovanni Lunetta\\
+  University of Connecticut}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A sigmoid function is a mathematical function having that looks like an 
+"S"-shaped curve. This function will be explored and its relationship to 
+machine learning will be stated.
+\end{abstract}
+
+
+\section{Introduction}
+\label{sec:intro}
+A very common example of the sigmoid function is logistic function. 
+This function can be defined by the formula:
+\begin{equation}
+  \label{eq:sigmoideq}
+  S(x) =  \frac{1}{1 +{e^{-x}}}.
+\end{equation}
+
+\section{Definition}
+\label{sec:def}
+According to Wikipedia \citep{wikipedia_2022}, "A sigmoid function is a bounded, differentiable, 
+real function that is defined for all real input values and has a non-negative 
+derivative at each point and exactly one inflection point. A sigmoid 'function' 
+and a sigmoid 'curve' refer to the same object. 
+  
+\section{Function}
+\label{sec:function}
+The equation in Section~\ref{sec:intro} can also be written as $1 - S(-x).$
+As shown in the figure above, a sigmoid function is a smooth, upward sloping 
+curve that has a bell shape and evens off at high and low values. Its integral is 
+related to common probability distributions like the normal and Cauchy 
+distributions. Sigmoid functions are either concave or convex around a certain 
+point, usually 0.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{SigmoidFunction.pdf}
+\caption{Here is a graph of the function shown in Equation~(\ref{eq:sigmoideq}).}
+\label{fig:sigmoidfunc}
+\end{figure}
+
+\section{Uses}
+\label{sec:uses}
+The Sigmoid Function gets most of its use in the data-science world, particularly 
+in classification machine learning problems. A good real world example of this 
+functions use case would be attempted to create a machine learning model that 
+predicts if an email is spam or not. Here is a small picture of what a dataset might 
+look like where a "yes" is coded as "1" and a "no" is coded as a "0."
+\begin{table}[h]
+  \caption{Small Spam Dataset}
+	\label{tab:spam}
+\centering
+\begin{tabular}{lrrr}
+  \toprule
+& Attachments & Emoji & Spam \\ 
+  \midrule
+User 1 & 1 & 1 & 1 \\ 
+User 2 & 1 & 0 & 0 \\ 
+User 3 & 0 & 0 & 1 \\ 
+User 4 & 1 & 0 & 1 \\ 
+User 5 & 0 & 1 & 1 \\ 
+User 6 & 0 & 0 & 0 \\ 
+User 7 & 0 &  1 & 0 \\ 
+  \bottomrule
+\end{tabular}
+\end{table}
+If we were to graph these points, we would see that the data points would have a y 
+value of either 0 or 1. This makes Figure~\ref{fig:sigmoidfunc} a perfect use-case for 
+predicting the proper outcome.
+
+\section{Further Ideas}
+\label{sec:furtherideas}
+Data such as the data seen in Table~\ref{tab:spam} under Section~\ref{sec:uses} is not 
+hard to come by. There are many websites that can provide you with data. Such as Kaggle \citep{kaggle_datasets} and NYC Open Data \citet{nyc_open_data}.
+
+%Imports the bibliography file "sample.bib"
+\bibliography{LaTexPractice2.bib}
+\bibliographystyle{asa}
+\typeout{}
+
+
+\end{document}
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

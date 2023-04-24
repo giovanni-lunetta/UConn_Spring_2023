@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2022)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: LaTexPractice2.aux
+The style file: asa.bst
+Database file #1: LaTexPractice2.bib
+Warning--to sort, need author or key in wikipedia_2022
+Warning--to sort, need author or key in kaggle_datasets
+You've used 3 entries,
+            2777 wiz_defined-function locations,
+            641 strings with 4902 characters,
+and the built_in function-call counts, 787 in all, are:
+= -- 72
+> -- 10
+< -- 1
++ -- 6
+- -- 3
+* -- 62
+:= -- 137
+add.period$ -- 6
+call.type$ -- 3
+change.case$ -- 13
+chr.to.int$ -- 3
+cite$ -- 9
+duplicate$ -- 45
+empty$ -- 72
+format.name$ -- 4
+if$ -- 149
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 0
+newline$ -- 14
+num.names$ -- 4
+pop$ -- 16
+preamble$ -- 1
+purify$ -- 13
+quote$ -- 0
+skip$ -- 35
+stack$ -- 0
+substring$ -- 40
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 27
+warning$ -- 2
+while$ -- 3
+width$ -- 0
+write$ -- 29
+(There were 2 warnings)

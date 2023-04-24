@@ -1,0 +1,14 @@
+\begin{thebibliography}{3}
+\newcommand{\enquote}[1]{``#1''}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{wik(2022)}]{wikipedia_2022}
+ (2022), \enquote{Sigmoid function,} .
+
+\bibitem[{kag(2023)}]{kaggle_datasets}
+ (2023), \enquote{Find open datasets and Machine Learning Projects,} .
+
+\bibitem[{City~of New~York(2023)}]{nyc_open_data}
+City~of New~York, N. O.~D. (2023), \enquote{NYC open data,} .
+
+\end{thebibliography}
