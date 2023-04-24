@@ -1,0 +1,132 @@
+---
+title: "Homework 5"
+author: "Giovanni Lunetta"
+date: "February 22, 2023"
+format:
+  html:
+    code-fold: true
+  pdf: 
+    geometry: 
+      - top=30mm
+      - left=20mm
+jupyter: python3
+---
+
+# Exercise 8
+Using the cleaned NYC crash data, perform classification of injury with support vector machine and compare the results with the benchmark from regularized logistic regression. Use the last week’s data as testing data.
+
+First we preprocess and prepare for modeling
+```{python}
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+# load the cleaned NYC crash data
+df = pd.read_csv("cleaned_nyc_crashes_202301.csv")
+
+# create list of column names to create dummies for
+cols_to_dummy = ['BOROUGH', 'ON STREET NAME', 'CROSS STREET NAME', 'OFF STREET NAME', 'county', 'CONTRIBUTING FACTOR VEHICLE 1', 'CONTRIBUTING FACTOR VEHICLE 2', 'CONTRIBUTING FACTOR VEHICLE 3',
+                       'CONTRIBUTING FACTOR VEHICLE 4', 'CONTRIBUTING FACTOR VEHICLE 5', 'VEHICLE TYPE CODE 1', 
+                       'VEHICLE TYPE CODE 2', 'VEHICLE TYPE CODE 3', 'VEHICLE TYPE CODE 4', 'VEHICLE TYPE CODE 5']
+
+# create dummies for specified columns
+df = pd.get_dummies(df, columns=cols_to_dummy, prefix=cols_to_dummy)
+
+# drop uneeded column
+df.drop(['Unnamed: 0'], axis=1, inplace=True)
+
+# drop all null values
+df.dropna(inplace=True)
+
+# subset the data to only include the last week
+df_last_week = df.loc[(df['CRASH DATE'] >= '01/25/2023') & (df['CRASH DATE'] <= '01/31/2023')]
+print(df_last_week["CRASH DATE"].value_counts(dropna=False))
+
+# get the indices of the rows to exclude
+test_indices = df_last_week.index
+# create df_train by excluding the test data
+df_train = df.drop(test_indices)
+print(df_train["CRASH DATE"].value_counts(dropna=False))
+
+# convert date_of_crash to datetime
+df_last_week['CRASH DATE'] = pd.to_datetime(df_last_week['CRASH DATE'], format='%m/%d/%Y')
+# extract the timestamp as a numerical value
+df_last_week['CRASH DATE'] = df_last_week['CRASH DATE'].astype(int)
+
+# convert date_of_crash to datetime
+df_train['CRASH DATE'] = pd.to_datetime(df_train['CRASH DATE'], format='%m/%d/%Y')
+# extract the timestamp as a numerical value
+df_train['CRASH DATE'] = df_train['CRASH DATE'].astype(int)
+```
+
+Now we model
+```{python}
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score
+
+# Split the data into training and testing sets
+
+# remove the 'injury' column from both dataframes
+X_train = df_train.drop('injury', axis=1)
+X_test = df_last_week.drop('injury', axis=1)
+
+# create the target variables
+y_train = df_train['injury']
+y_test = df_last_week['injury']
+
+# Fit and evaluate a regularized logistic regression model
+logreg = LogisticRegression(penalty='l2', solver='saga')
+logreg.fit(X_train, y_train)
+y_pred_logreg = logreg.predict(X_test)
+accuracy_logreg = accuracy_score(y_test, y_pred_logreg)
+cm_logreg = confusion_matrix(y_test, y_pred_logreg)
+report_logreg = classification_report(y_test, y_pred_logreg)
+auc_logreg = roc_auc_score(y_test, y_pred_logreg)
+
+# Fit and evaluate a support vector machine model
+svm = SVC(kernel='linear')
+svm.fit(X_train, y_train)
+y_pred_svm = svm.predict(X_test)
+accuracy_svm = accuracy_score(y_test, y_pred_svm)
+cm_svm = confusion_matrix(y_test, y_pred_svm)
+report_svm = classification_report(y_test, y_pred_svm)
+auc_svm = roc_auc_score(y_test, y_pred_svm)
+
+# Print the performance metrics
+print("Logistic Regression Accuracy:", accuracy_logreg)
+print("Logistic Regression Confusion Matrix:\n", cm_logreg)
+print("Logistic Regression Classification Report:\n", report_logreg)
+print("Logistic Regression AUC:", auc_logreg)
+print("Support Vector Machine Accuracy:", accuracy_svm)
+print("Support Vector Machine Confusion Matrix:\n", cm_svm)
+print("Support Vector Machine Classification Report:\n", report_svm)
+print("Support Vector Machine AUC:", auc_svm)
+```
+
+# Explain the parameters you used in your fitting for each method.
+For logistic regression, we used the following parameters:
+penalty: 'l2': This is the regularization technique used for the logistic regression. L2 regularization adds a penalty term to the loss function that is proportional to the square of the magnitude of the coefficients. This helps to prevent overfitting by shrinking the coefficients towards zero.
+
+solver: 'saga': This is the algorithm used to optimize the loss function. Saga is a variant of stochastic gradient descent that is efficient for large datasets.
+
+For the support vector machine (SVM), we used the following parameters:
+kernel: 'linear': This is the kernel function used for the SVM. The linear kernel function creates a linear decision boundary between the classes.
+
+# Explain the confusion matrix return from each fit.
+The confusion matrix shows the number of true positives, true negatives, false positives, and false negatives. In this case, both logistic regression and SVM models predicted all samples to be negative (0), resulting in a confusion matrix with 649 true negatives and 395 false negatives. Since there are no true positives or false positives, precision, recall, F1-score, and AUC are not defined.
+
+# Compare the performance of the two approaches in terms of accuracy, precision, recall, F1-score, and AUC.
+In this case, both logistic regression and SVM models predicted all samples to be negative (0), resulting in an accuracy of 62.2%, which is not a good performance. Since there are no true positives or false positives, precision, recall, F1-score, and AUC are not defined. Therefore, we cannot compare the performance of the two approaches using these metrics.
+
+But, in order to explain what these metrics are...
+
+Accuracy is the proportion of correctly classified samples out of all the samples. It is not always a good performance metric, especially if the classes are imbalanced.
+
+Precision is the proportion of true positives out of all the samples predicted to be positive. It measures how accurate the positive predictions are.
+
+Recall is the proportion of true positives out of all the actual positive samples. It measures how well the model is able to identify positive samples.
+
+F1-score is the harmonic mean of precision and recall, and it provides a balanced measure between the two.
+
+AUC (Area Under the ROC Curve) is a measure of the model's ability to distinguish between positive and negative samples. It is the area under the ROC curve, where ROC stands for Receiver Operating Characteristic. The ROC curve is a plot of the true positive rate (TPR) against the false positive rate (FPR) at different classification thresholds. A perfect classifier has an AUC of 1, while a random classifier has an AUC of 0.5.

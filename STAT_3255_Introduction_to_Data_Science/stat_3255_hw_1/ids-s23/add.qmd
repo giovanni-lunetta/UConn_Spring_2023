@@ -1,0 +1,15 @@
+# Create a new file called add.qmd containing a few lines of texts; commit.
+
+There are many common machine learning models that I have some backround in using.
+This includes:
+1. Linear regression
+1. Logistic Regression
+1. Multiclass Logistic Regression
+My favorite is probably Multiclass Logistic Regression because I find it very interesting how a machine learning model can correctly create the proper thresholds.
+
+According to numpy.org, "NumPy is the fundamental package for scientific computing in Python. It is a Python library that provides a multidimensional array object, various derived objects (such as masked arrays and matrices), and an assortment of routines for quick operations on arrays, including mathematical, logical, shape manipulation, sorting, selecting, I/O, discrete Fourier transforms, basic linear algebra, basic statistical operations, random simulation and much more."
+
+According to tensorflow.org, "The TensorFlow platform helps you implement best practices for data automation, model tracking, performance monitoring, and model retraining. Using production-level tools to automate and track model training over the lifetime of a product, service, or business process is critical to success."
+
+According to sklearn.org, sklearn is a "simple and efficient tools for predictive data analysis."
+

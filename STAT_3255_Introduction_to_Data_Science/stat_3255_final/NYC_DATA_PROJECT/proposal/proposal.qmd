@@ -1,0 +1,36 @@
+---
+title: "Final Proposal"
+author: "Giovanni Lunetta"
+date: "March 20, 2023"
+format:
+  html:
+    code-fold: true
+    embed-resources: true
+  pdf: 
+    geometry: 
+      - top=30mm
+      - left=20mm
+jupyter: python3
+---
+
+# 1 Introduction:
+This research proposal aims to investigate the relationship between specific types of 311 complaints and the boroughs they are most common in, as well as the demographic characteristics of those boroughs. This research is important as it can help identify potential areas for improvement in service delivery and policy development in New York City. Previous studies have analyzed the relationship between 311 complaints and various demographic factors such as income, race, and education level (e.g. "Structure of 311 service requests as a signature of urban location"). However, there is a need to further explore the variations in 311 complaints across different boroughs.
+
+# 2 Specific aims:
+The research question for this study is: Are there specific types of 311 complaints that are more common in certain boroughs of NYC, and is there a relationship between borough demographics and the types of complaints received? The hypothesis is that there are differences in the types of 311 complaints across the boroughs, and these differences are related to the demographic characteristics of each borough.
+
+# 3 Data description:
+The data set for this study will be obtained from the NYC Open Data Portal, which contains information on all 311 service requests received by the City of New York since 2010. The data set will be filtered to include only the complaints from January and February of 2023. The sampling scheme include all 311 complaints received by NYPD. The data set will include information on the borough, complaint type, and other relevant demographic information such as population density, and median household income.
+
+# 4 Research design/methods/schedule:
+The first step in the analysis will be to explore the distribution of the different types of 311 complaints across the boroughs using a Kruskal-Wallis test. This non-parametric test will allow me to determine if there are any significant differences in the distribution of complaint types between the boroughs. If there are significant differences, I will conduct post-hoc tests to identify which specific complaint types are more common in which boroughs.
+
+Next, I will develop a machine learning model using some of the demographic and complaint data to predict the likelihood of a certain complaint type occurring in a particular borough. I will use a logistic regression model with borough and demographic information as predictors and complaint type as the outcome variable. The model will be trained on a randomly selected subset of the data and validated on another subset.
+
+Finally, I will interpret the results and discuss their implications for policy development and service delivery in New York City. I expect to find that there are significant differences in the distribution of 311 complaints across the boroughs, and that these differences are related to demographic characteristics. I anticipate that our findings may challenge existing assumptions about the relationship between complaints and borough demographics, and provide insights for more targeted and effective policy interventions.
+
+# 5 Discussion:
+The results of this study have the potential to inform policy interventions that are tailored to the specific needs of each borough. For example, if I find that certain types of complaints are more common in areas with lower income, this may suggest a need for targeted outreach programs to improve service utilization and overall satisfaction. Similarly, if I find that certain boroughs have more frequent complaints related to specific infrastructure or public services, this may indicate a need for more targeted maintenance and repair programs.
+
+# 6 Conclusion:
+In conclusion, this research proposal aims to investigate the relationship between 311 complaints and borough demographics in New York City. The research question and hypothesis have been formulated, and the data set and methods for analysis have been described. I expect that this study will contribute to the literature on 311 complaints and demographic characteristics, and provide insights for policy interventions that

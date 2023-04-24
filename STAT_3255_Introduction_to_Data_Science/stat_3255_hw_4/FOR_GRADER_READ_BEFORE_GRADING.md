@@ -1,0 +1,1 @@
+I know that it is after the due date, but I realized that for part of the question I forgot to state my results. Then, for the last question, I was not sure if Prof Yan wanted us to use normal logistic regression or regularized logistic regression so I added regularized just in case.

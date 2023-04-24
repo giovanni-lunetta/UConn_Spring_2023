@@ -1,0 +1,684 @@
+---
+title: "Midterm"
+author: "Giovanni Lunetta"
+date: "February 28, 2023"
+format:
+  html:
+    code-fold: true
+    embed-resources: true
+  pdf: 
+    geometry: 
+      - top=30mm
+      - left=20mm
+jupyter: python3
+---
+
+# Exercise 9 
+(Mid-term team project) The NYC Open Data of 311 Service Requests contains all requests from 2010 to present. We consider a subset of it with request time between 00:00:00 01/15/2023 and 24:00:00 01/21/2023. The subset is available in CSV format as data/nyc311_011523-012123_by022023.csv. Read the data dictionary to understand the meaning of the variables.
+
+# 9.1 
+Clean the data: fill missing fields as much as possible; check for obvious data entry errors (e.g., can Closed Date be earlier than Created Date?); summarize your suggestions to the data curator in several bullet points.
+```{python}
+import pandas as pd
+
+df = pd.read_csv("nyc311_011523-012123_by022023.csv")
+
+# Unique Key does not provide us with an important information.
+# Location is the combination of Longitude & Latitude Column.
+# Agency Name is the full name of Agency
+df.drop(['Unique Key', 'Location', 'Agency Name'], axis=1, inplace=True)
+
+# All of these columns have over 99% data missing, therefore, given the time contraint, it is not reasonable to try to fill this data in.
+df.drop(['Bridge Highway Segment', 'Road Ramp', 'Bridge Highway Direction', 'Bridge Highway Name', 'Taxi Pick Up Location', 'Taxi Company Borough', 'Vehicle Type', 'Due Date', 'Facility Type'], axis=1, inplace=True)
+
+# percent missing for each variable
+# print((df.isnull().sum() * 100)/ len(df))
+
+# convert "Created Date" and "Closed Date" columns to datetime objects
+df['Created Date'] = pd.to_datetime(df['Created Date'])
+df['Closed Date'] = pd.to_datetime(df['Closed Date'], errors='coerce')
+
+# # Select the columns you want to print
+# two_columns_df = df[['Created Date', 'Closed Date']]
+
+# # Print the new dataframe with two columns
+# two_columns_df
+
+# Check if there are any instances where the "Closed Date" is earlier than the "Created Date"
+closed_earlier = df[df['Closed Date'] < df['Created Date']]
+
+if closed_earlier.empty:
+    print("No instances where 'Closed Date' is earlier than 'Created Date'")
+else:
+    print("There are instances where 'Closed Date' is earlier than 'Created Date'")
+
+# # prints the number of entries that have this problem
+# # prints the dataset to inspect further
+# print(len(closed_earlier))
+# print(closed_earlier)
+
+# creates an index containing all of examples where closed date is before created data and drops those columns
+index_to_drop = df.index[df['Closed Date'] < df['Created Date']].tolist()
+df.drop(index_to_drop, inplace=True)
+
+# # view all unique values of 'Location Type'
+# with pd.option_context('display.max_rows', None):
+#     print(df["Location Type"].value_counts(dropna=False))
+
+# fill null values with 'Other'
+df['Location Type'] = df['Location Type'].fillna('Other')
+
+# change all 'Other (Explain Below)' to 'Other' because they are the same thing
+df['Location Type'] = df['Location Type'].replace('Other (Explain Below)', 'Other')
+
+# with pd.option_context('display.max_rows', None):
+#     print(df["Descriptor"].value_counts(dropna=False))
+
+# fill null values with 'Other'
+df['Descriptor'] = df['Descriptor'].fillna('Other')
+
+# change all versions of other to uniform 'Other'
+df['Descriptor'] = df['Descriptor'].replace({'Other (Explain Below)': 'Other',
+                                             'Other (complaint details)': 'Other',
+                                             'Other/Unknown': 'Other'})
+
+# with pd.option_context('display.max_rows', None):
+#     print(df["Address Type"].value_counts(dropna=False))
+
+# fill null values with 'UNRECOGNIZED'
+df['Address Type'] = df['Address Type'].fillna('UNRECOGNIZED')
+
+# with pd.option_context('display.max_rows', None):
+#     print(df["City"].value_counts(dropna=False))
+
+# convert lowercase columni
+df['City'] = df['City'].str.lower()
+
+# fill city names from logitude and latitude
+
+# with pd.option_context('display.max_rows', None):
+#     print(df["Landmark"].value_counts(dropna=False))
+
+# with pd.option_context('display.max_rows', None):
+#     print(df['Resolution Description'].value_counts(dropna=False))
+
+# df['Resolution Description'].nunique()
+
+# with pd.option_context('display.max_rows', None):
+#     print(df['Resolution Action Updated Date'].value_counts(dropna=False)) 
+
+df['Resolution Action Updated Date'].nunique()
+df['Resolution Action Updated Date'] = pd.to_datetime(df['Resolution Action Updated Date'])
+
+# with pd.option_context('display.max_rows', None):
+#     print(df['Park Facility Name'].value_counts(dropna=False))
+
+df['Park Facility Name'] = df['Park Facility Name'].fillna('Unspecified')
+
+# percent missing for each variable
+print((df.isnull().sum() * 100)/ len(df))
+
+import geopy
+import geocoder
+import pandas as pd
+
+# THIS CODE WAS RUN IN ORDER TO CREATE THE CLEANED DATASET, BUT BECAUSE THIS CODE TAKES SEVERALS MINUTES TO RUN IT HAS BEEN COMMENTED OUT, BUT THE CODE WAS USED 
+
+# # create a function to perform geocoding
+# def geocode(address):
+#     try:
+#         location = geocoder.osm(address)
+#         return location.lat, location.lng
+#     except:
+#         return None, None
+
+# # create a function to perform reverse geocoding
+# def reverse_geocode(latitude, longitude):
+#     try:
+#         location = geopy.Point(latitude, longitude)
+#         address = geopy.geocoders.Nominatim(user_agent="my-application").reverse(location)
+#         return address.address
+#     except:
+#         return None
+
+# # iterate over the DataFrame and fill in the missing values
+# for index, row in df.iterrows():
+#     if pd.isnull(row['Latitude']) or pd.isnull(row['Longitude']):
+#         lat, lng = geocode(row['Incident Address'])
+#         df.at[index, 'Latitude'] = lat
+#         df.at[index, 'Longitude'] = lng
+#     if pd.isnull(row['Incident Address']):
+#         address = reverse_geocode(row['Latitude'], row['Longitude'])
+#         df.at[index, 'Incident Address'] = address
+
+# percent missing for each variable
+print((df.isnull().sum() * 100)/ len(df))
+
+# check where the zip code is 10000, and then remove these rows
+count = df[df['Incident Zip'] == 10000.000000]['Incident Zip'].count()
+print(count)
+
+df.drop(df[df['Incident Zip'] == 10000.000000].index, inplace=True)
+```
+Here is what I suggest:
+
+1. My first suggestion is that there is no need for the 'Agency Name' and the 'Location' columns. These columns are redundant and do not provide any additional information.
+
+2. Secondly, I question as to how it is possible for a close date to be earlier than the created date. I would make the person who is inputting the data reenter when the case was created when they are closing it in order to avoid this issue.
+
+3. My third and overarching suggestion is to not allow someone to enter nothing. Whether it is inputting 'Other' or 'Unspecified' keep it consistent. This can be accomplished by not allowing the person inputting the data to leave an input blank or having the system auto-input one of those two fillers if it is left blank.
+
+4. My fourth suggestion is similar. Columns such as 'Descriptor' have many different forms of 'Other such as 'Other (Explain Below)', 'Other (complaint details)', and 'Other/Unknown'. I understand how this could happen because those who click other have another dropdown area where they fill this in. But, if this is selected, then what they fill in for other must be put into that area, not the choice 'Other (Explain Below)'.
+
+5. Finally, I would make sure everything inputted is either in all lowercase or all uppercase in order to avoid differences in values such as 'Queens' and 'queens'.
+
+# 9.2
+Remove requests that are not made to NYPD and create a new variable duration, which represents the time period from the Crated Date to Closed Date. Note that duration may be censored for some requests. Visualize the distribution of uncensored duration by weekdays/weekend and by borough, and test whether the distributions are the same across weekdays/weekends and across borough.
+```{python}
+# create a new column 'duration' by subtracting the 'Created Date' column from the 'Closed Date' column
+df['duration'] = df['Closed Date'] - df['Created Date']
+
+# convert the resulting timedelta object to a numerical value in seconds
+df['duration_seconds'] = df['duration'].dt.total_seconds()
+
+df['duration_hours'] = df['duration'].dt.total_seconds() / 3600
+
+df['duration_days'] = df['duration'].dt.days
+
+# print the first few rows of the resulting DataFrame
+df['duration_hours'].describe()
+
+# check all values
+# with pd.option_context('display.max_rows', None):
+#     print(df['Agency'].value_counts(dropna=False))
+
+# drop all that are not NYPD
+df = df[df['Agency'] == 'NYPD']
+
+df['duration_hours'].describe()
+
+import numpy as np
+
+# Create two new columns - one for the day of the week and one for the type of day (weekday/weekend):
+df['day_of_week'] = df['Created Date'].dt.dayofweek
+df['day_type'] = np.where(df['day_of_week'] < 5, 'weekday', 'weekend')
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Create a histogram for each borough using sns.histplot():
+for borough in df['Borough'].unique():
+    sns.histplot(data=df[(df['Borough'] == borough) & (df['duration_hours'] >= 0)], 
+                 x='duration_hours', 
+                 hue='day_type', 
+                 kde=True, 
+                 bins=50, 
+                 alpha=0.5)
+    plt.title(f'Distribution of Uncensored Duration for {borough}')
+    plt.xlabel('Duration (hours)')
+    plt.show()
+
+# Create a new DataFrame with only uncensored requests:
+uncensored_df = df.dropna(subset=['Closed Date'])
+uncensored_df = df[df['duration'] >= pd.Timedelta(0)]
+
+# Create a boxplot for each borough using sns.boxplot():
+sns.boxplot(data=uncensored_df, x='Borough', y='duration_hours', hue='day_type')
+plt.title('Distribution of Uncensored Duration by Borough and Day Type')
+plt.xlabel('Borough')
+plt.ylabel('Duration (hours)')
+plt.show()
+
+from scipy.stats import kruskal
+
+# Create two new DataFrames - one for weekdays and one for weekends
+weekday_df = uncensored_df[uncensored_df['day_type'] == 'weekday']
+weekend_df = uncensored_df[uncensored_df['day_type'] == 'weekend']
+
+# Perform the Kruskal-Wallis test on each borough
+for borough in uncensored_df['Borough'].unique():
+    weekday_duration = weekday_df[weekday_df['Borough'] == borough]['duration_hours']
+    weekend_duration = weekend_df[weekend_df['Borough'] == borough]['duration_hours']
+    _, pvalue = kruskal(weekday_duration, weekend_duration)
+    print(f'p-value for {borough}: {pvalue}')
+
+# df.to_csv('cleaned.csv')
+```
+Based on the p-values, we can conclude that the distribution of uncensored durations is not the same across all boroughs. Specifically, the p-values for Queens, Brooklyn, and Staten Island are less than the significance level of 0.05, suggesting that the distribution of uncensored durations differs significantly across these boroughs. However, the p-values for the Bronx, Manhattan, and Unspecified are greater than 0.05, indicating that we cannot reject the null hypothesis that the distributions are the same across these boroughs.
+
+# 9.3
+Define a binary variable over3h which is 1 if duration is greater than 3 hours. Note that it can be obtained even for censored duration. Build a model to predict over3h. If your model has tuning parameters, justify their choices. Apply this model to the 311 requests of NYPD in the week of 01/22/2023. Assess the performance of your model.
+
+## 9.3.1 Preprocess the Train Data
+```{python}
+df_new = pd.read_csv('cleaned.csv')
+df_cleaned = df_new.copy()
+
+df_cleaned.drop('Unnamed: 0', axis=1, inplace=True)
+
+# Convert all string values to lowercase
+df_cleaned = df_cleaned.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+
+# # Replace missing values in 'duration_hours' with 4 which is more than 3 so it will be coded as 1
+df_cleaned['duration_hours'] = df_cleaned['duration_hours'].fillna(4)
+
+# Define binary variable over3days
+df_cleaned['over3h'] = np.where(df_cleaned['duration_hours'] > 3, 1, 0)
+
+print((df_cleaned.isnull().sum() * 100)/ len(df))
+
+with pd.option_context('display.max_rows', None):
+    print(df_cleaned['over3h'].value_counts(dropna=False))
+
+# percent missing for each variable
+# print((df_cleaned.isnull().sum() * 100)/ len(df_cleaned))
+
+# drop columns that have to do with predictor variable along with 'BBL' and 'Agency' as they do not provide any information
+df_cleaned = df_cleaned.drop(['duration', 'duration_days', 'Closed Date'], axis=1)
+df_cleaned = df_cleaned.drop(['Street Name', 'BBL', 'Agency', 'Incident Address', 'X Coordinate (State Plane)', 'Y Coordinate (State Plane)', 'Status', 'Community Board', 'Cross Street 1', 'Cross Street 2', 'Intersection Street 1', 'Intersection Street 2', 'Status', 'Landmark', 'Park Borough'], axis=1)
+
+# percent missing for each variable
+# print((df_cleaned.isnull().sum() * 100)/ len(df_cleaned))
+
+# drop rows where rows are null
+df_cleaned = df_cleaned.dropna(subset=['City'])
+
+# percent missing for each variable
+print((df_cleaned.isnull().sum() * 100)/ len(df_cleaned))
+
+from sklearn.preprocessing import StandardScaler
+
+# Create a StandardScaler object
+scaler = StandardScaler()
+
+# Fit and transform the 'Latitude' and 'Longitude' columns using .loc
+df_cleaned.loc[:, ['Latitude', 'Longitude']] = scaler.fit_transform(df_cleaned.loc[:, ['Latitude', 'Longitude']])
+
+# df_cleaned['Latitude'].head()
+
+# df_cleaned.dtypes
+
+df_cleaned = df_cleaned.drop(['duration_seconds', 'duration_hours'], axis=1)
+
+df_cleaned['Incident Zip'] = df_cleaned['Incident Zip'].astype(str)
+df_cleaned['day_of_week'] = df_cleaned['day_of_week'].astype(str)
+df_cleaned['day_type'] = df_cleaned['day_type'].astype(str)
+
+# df_cleaned.dtypes
+
+df_cleaned['Created Date'] = pd.to_datetime(df_cleaned['Created Date'])
+df_cleaned['Resolution Action Updated Date'] = pd.to_datetime(df_cleaned['Resolution Action Updated Date'])
+
+# Extract hour, day, and month from 'Created Date' column
+df_cleaned['Created Hour'] = df_cleaned['Created Date'].dt.hour
+df_cleaned['Created Day'] = df_cleaned['Created Date'].dt.day
+df_cleaned['Created Month'] = df_cleaned['Created Date'].dt.month
+
+# Extract hour, day, and month from 'Resolution Action Updated Date' column
+df_cleaned['Resolution Updated Hour'] = df_cleaned['Resolution Action Updated Date'].dt.hour
+df_cleaned['Resolution Updated Day'] = df_cleaned['Resolution Action Updated Date'].dt.day
+df_cleaned['Resolution Updated Month'] = df_cleaned['Resolution Action Updated Date'].dt.month
+
+df_cleaned.drop(['Created Date', 'Resolution Action Updated Date'], axis=1, inplace=True)
+
+df_cleaned.drop(['Created Month', 'Resolution Updated Month'], axis=1)
+
+# Create a StandardScaler object
+scaler = StandardScaler()
+
+# Fit and transform the 'Latitude' and 'Longitude' columns using .loc
+df_cleaned.loc[:, ['Created Day', 'Created Hour', 'Resolution Updated Hour', 'Resolution Updated Day']] = scaler.fit_transform(df_cleaned.loc[:, ['Created Day', 'Created Hour', 'Resolution Updated Hour', 'Resolution Updated Day']])
+
+# Define columns to be one-hot encoded
+columns = ['Incident Zip', 'Resolution Description', 'Complaint Type', 'Descriptor', 'Location Type', 'Address Type', 'City', 'Borough', 'Open Data Channel Type', 'Park Facility Name', 'day_of_week', 'day_type']
+
+# Apply one-hot encoding and add the prefix 'column_name'
+df_cleaned = pd.get_dummies(df_cleaned, columns=columns, prefix=columns)
+
+df_cleaned.shape
+```
+
+## 9.3.2 Cleaning and Preprocessing the Test Data
+```{python}
+df_test = pd.read_csv("test_data.csv")
+
+# Unique Key does not provide us with an important information.
+# Location is the combination of Longitude & Latitude Column.
+# Agency Name is the full name of Agency
+df_test.drop(['Unique Key', 'Location', 'Agency Name'], axis=1, inplace=True)
+
+# All of these columns have over 99% data missing, therefore, given the time contraint, it is not reasonable to try to fill this data in.
+df_test.drop(['Bridge Highway Segment', 'Road Ramp', 'Bridge Highway Direction', 'Bridge Highway Name', 'Taxi Pick Up Location', 'Taxi Company Borough', 'Vehicle Type', 'Due Date', 'Facility Type', 'BBL', ], axis=1, inplace=True)
+
+# convert "Created Date" and "Closed Date" columns to datetime objects
+df_test['Created Date'] = pd.to_datetime(df_test['Created Date'])
+df_test['Closed Date'] = pd.to_datetime(df_test['Closed Date'], errors='coerce')
+
+# # Check if there are any instances where the "Closed Date" is earlier than the "Created Date"
+# closed_earlier = df_test[df_test['Closed Date'] < df_test['Created Date']]
+
+# if closed_earlier.empty:
+#     print("No instances where 'Closed Date' is earlier than 'Created Date'")
+# else:
+#     print("There are instances where 'Closed Date' is earlier than 'Created Date'")
+
+# # creates an index containing all of examples where closed date is before created data and drops those columns
+# index_to_drop = df.index[df['Closed Date'] < df_test['Created Date']].tolist()
+# df_test.drop(index_to_drop, inplace=True)
+
+# fill null values with 'Other'
+df_test['Location Type'] = df_test['Location Type'].fillna('Other')
+
+# change all 'Other (Explain Below)' to 'Other' because they are the same thing
+df_test['Location Type'] = df_test['Location Type'].replace('Other (Explain Below)', 'Other')
+
+# fill null values with 'Other'
+df_test['Descriptor'] = df_test['Descriptor'].fillna('Other')
+
+# change all versions of other to uniform 'Other'
+df_test['Descriptor'] = df_test['Descriptor'].replace({'Other (Explain Below)': 'Other',
+                                             'Other (complaint details)': 'Other',
+                                             'Other/Unknown': 'Other'})
+
+# fill null values with 'UNRECOGNIZED'
+df_test['Address Type'] = df_test['Address Type'].fillna('UNRECOGNIZED')
+
+# convert lowercase columni
+df_test['City'] = df_test['City'].str.lower()
+
+df_test['Resolution Action Updated Date'] = pd.to_datetime(df_test['Resolution Action Updated Date'])
+
+df_test['Park Facility Name'] = df_test['Park Facility Name'].fillna('Unspecified')
+
+# THIS CODE WAS RUN IN ORDER TO CREATE THE CLEANED DATASET, BUT BECAUSE THIS CODE TAKES SEVERALS MINUTES TO RUN IT HAS BEEN COMMENTED OUT, BUT THE CODE WAS USED
+
+# import geopy
+# import geocoder
+
+# # create a function to perform geocoding
+# def geocode(address):
+#     try:
+#         location = geocoder.osm(address)
+#         return location.lat, location.lng
+#     except:
+#         return None, None
+
+# # create a function to perform reverse geocoding
+# def reverse_geocode(latitude, longitude):
+#     try:
+#         location = geopy.Point(latitude, longitude)
+#         address = geopy.geocoders.Nominatim(user_agent="my-application").reverse(location)
+#         return address.address
+#     except:
+#         return None
+
+# # iterate over the DataFrame and fill in the missing values
+# for index, row in df.iterrows():
+#     if pd.isnull(row['Latitude']) or pd.isnull(row['Longitude']):
+#         lat, lng = geocode(row['Incident Address'])
+#         df.at[index, 'Latitude'] = lat
+#         df.at[index, 'Longitude'] = lng
+#     if pd.isnull(row['Incident Address']):
+#         address = reverse_geocode(row['Latitude'], row['Longitude'])
+#         df.at[index, 'Incident Address'] = address
+
+# percent missing for each variable
+print((df_test.isnull().sum() * 100)/ len(df))
+
+# check where the zip code is 10000, and then remove these rows
+count = df_test[df_test['Incident Zip'] == 10000.000000]['Incident Zip'].count()
+print(count)
+
+df_test.drop(df_test[df_test['Incident Zip'] == 10000.000000].index, inplace=True)
+
+# create a new column 'duration' by subtracting the 'Created Date' column from the 'Closed Date' column
+df_test['duration'] = df_test['Closed Date'] - df_test['Created Date']
+
+# convert the resulting timedelta object to a numerical value in seconds
+df_test['duration_seconds'] = df_test['duration'].dt.total_seconds()
+
+df_test['duration_hours'] = df_test['duration'].dt.total_seconds() / 3600
+
+df_test['duration_days'] = df_test['duration'].dt.days
+
+import numpy as np
+
+# Create two new columns - one for the day of the week and one for the type of day (weekday/weekend):
+df_test['day_of_week'] = df_test['Created Date'].dt.dayofweek
+df_test['day_type'] = np.where(df_test['day_of_week'] < 5, 'weekday', 'weekend')
+
+# Define binary variable over3days
+df_test['over3h'] = np.where(df_test['duration_hours'] > 3, 1, 0)
+
+with pd.option_context('display.max_rows', None):
+    print(df_test['over3h'].value_counts(dropna=False))
+
+# Convert all string values to lowercase
+df_test = df_test.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+
+# percent missing for each variable
+# print((df_cleaned.isnull().sum() * 100)/ len(df_cleaned))
+
+# drop columns that have to do with predictor variable along with 'BBL' and 'Agency' as they do not provide any information
+# df = df.drop(['duration', 'duration_days', 'Closed Date'], axis=1)
+df_test = df_test.drop(['duration', 'duration_days', 'Closed Date'], axis=1)
+df_test = df_test.drop(['Street Name', 'Agency', 'Incident Address', 'X Coordinate (State Plane)', 'Y Coordinate (State Plane)', 'Status', 'Community Board', 'Cross Street 1', 'Cross Street 2', 'Intersection Street 1', 'Intersection Street 2', 'Status', 'Landmark', 'Park Borough'], axis=1)
+
+# percent missing for each variable
+# print((df_cleaned.isnull().sum() * 100)/ len(df_cleaned))
+
+# drop rows where rows are null
+df_test = df_test.dropna(subset=['City', 'Resolution Description'])
+
+# percent missing for each variable
+print((df_test.isnull().sum() * 100)/ len(df_test))
+
+from sklearn.preprocessing import StandardScaler
+
+# Create a StandardScaler object
+scaler = StandardScaler()
+
+# Fit and transform the 'Latitude' and 'Longitude' columns using .loc
+df_test.loc[:, ['Latitude', 'Longitude']] = scaler.fit_transform(df_test.loc[:, ['Latitude', 'Longitude']])
+
+# df_cleaned['Latitude'].head()
+
+# df_cleaned.dtypes
+
+df_test = df_test.drop(['duration_seconds', 'duration_hours'], axis=1)
+
+df_test['Incident Zip'] = df_test['Incident Zip'].astype(str)
+df_test['day_of_week'] = df_test['day_of_week'].astype(str)
+df_test['day_type'] = df_test['day_type'].astype(str)
+
+# df_cleaned.dtypes
+
+df_test['Created Date'] = pd.to_datetime(df_test['Created Date'])
+df_test['Resolution Action Updated Date'] = pd.to_datetime(df_test['Resolution Action Updated Date'])
+
+# Extract hour, day, and month from 'Created Date' column
+df_test['Created Hour'] = df_test['Created Date'].dt.hour
+df_test['Created Day'] = df_test['Created Date'].dt.day
+df_test['Created Month'] = df_test['Created Date'].dt.month
+
+# Extract hour, day, and month from 'Resolution Action Updated Date' column
+df_test['Resolution Updated Hour'] = df_test['Resolution Action Updated Date'].dt.hour
+df_test['Resolution Updated Day'] = df_test['Resolution Action Updated Date'].dt.day
+df_test['Resolution Updated Month'] = df_test['Resolution Action Updated Date'].dt.month
+
+df_test.drop(['Created Date', 'Resolution Action Updated Date'], axis=1, inplace=True)
+
+df_test.drop(['Created Month', 'Resolution Updated Month'], axis=1)
+
+# Create a StandardScaler object
+scaler = StandardScaler()
+
+# Fit and transform the 'Latitude' and 'Longitude' columns using .loc
+df_test.loc[:, ['Created Day', 'Created Hour', 'Resolution Updated Hour', 'Resolution Updated Day']] = scaler.fit_transform(df_test.loc[:, ['Created Day', 'Created Hour', 'Resolution Updated Hour', 'Resolution Updated Day']])
+
+# Define columns to be one-hot encoded
+columns = ['Incident Zip', 'Resolution Description', 'Complaint Type', 'Descriptor', 'Location Type', 'Address Type', 'City', 'Borough', 'Open Data Channel Type', 'Park Facility Name', 'day_of_week', 'day_type']
+
+# Apply one-hot encoding and add the prefix 'column_name'
+df_test = pd.get_dummies(df_test, columns=columns, prefix=columns)
+
+df_test.shape
+```
+
+## 9.3.3 Model
+```{python}
+df_cleaned.dropna(inplace=True)
+df_test.dropna(inplace=True)
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+
+# Split the cleaned data into train and validation sets
+X_train, X_val, y_train, y_val = train_test_split(df_cleaned.drop(['over3h'], axis=1), df_cleaned['over3h'], test_size=0.2, random_state=42)
+X_test = df_test.drop(['over3h'], axis=1)
+y_test = df_test['over3h']
+
+# Align the test data with the training data to add any missing columns
+X_test_aligned, X_train_aligned = X_test.align(X_train, join='outer', axis=1, fill_value=0)
+X_test = X_test_aligned.loc[:, X_train.columns]
+
+# Fit a logistic regression model
+logreg = LogisticRegression(penalty='l2', solver='saga', random_state=42).fit(X_train, y_train)
+
+# Predict the probabilities for the test data
+y_pred_proba = logreg.predict_proba(X_test)
+
+# Set a new threshold of 0.3
+y_pred = (y_pred_proba[:, 1] >= 0.75).astype(int)
+
+# Print the classification report
+print(classification_report(y_test, y_pred))
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, precision_recall_curve, confusion_matrix, plot_confusion_matrix
+
+def plot_roc_curve(y_true, y_score):
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    plt.plot(fpr, tpr)
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.show()
+
+def plot_precision_recall_curve(y_true, y_score):
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+    plt.plot(recall, precision)
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    plt.show()
+
+def plot_confusion_matrix_plot(y_true, y_pred, classes=None):
+    cm = confusion_matrix(y_true, y_pred, normalize='true')
+    disp = plot_confusion_matrix(logreg, X_test, y_test,
+                                 cmap=plt.cm.Blues,
+                                 normalize='true',
+                                 display_labels=classes)
+    disp.ax_.set_title('Confusion matrix')
+    plt.show()
+
+# Compute predicted probabilities for test set
+y_score = logreg.predict_proba(X_test)[:, 1]
+
+# Plot ROC curve
+plot_roc_curve(y_test, y_score)
+
+# Plot precision-recall curve
+plot_precision_recall_curve(y_test, y_score)
+
+# Plot confusion matrix
+plot_confusion_matrix_plot(y_test, y_pred, classes=logreg.classes_)
+```
+This code is building and evaluating a logistic regression model to predict whether a given 311 request from the NYPD will take over 3 hours to be completed, based on other features in the dataset.
+
+The penalty parameter is set to 'l2', which specifies the type of regularization to use. L2 regularization adds a penalty term to the cost function that is proportional to the square of the magnitude of the coefficients, which helps to prevent overfitting. L2 regularization is a good default choice for logistic regression, and is used in many practical applications.
+
+The solver parameter is set to 'saga', which specifies the algorithm to use for optimization. The 'saga' solver is a good choice when the dataset is large and when there are many features. It is known to be faster than other solvers such as 'liblinear' and 'lbfgs', and can handle both L1 and L2 regularization.
+
+The random_state parameter is set to 42, which is an arbitrary value used to ensure reproducibility of the results. When the same value is used for the random_state parameter, the same results are obtained each time the model is trained, which is useful for debugging and testing purposes.
+
+The threshold is set to 0.75 due to a class imbalance heavily favoring the 0 class (less than 3 hours).
+
+Based on the classification report, the model has a high accuracy of 0.92, meaning that it correctly classified 92% of the instances in the test set. The precision for both classes is also high at 0.92, indicating that when the model predicts a label, it is correct 92% of the time. However, the recall for the positive class (over3h=1) is low at 0.63, meaning that the model correctly identified only 63% of the instances where the actual label was 1.
+
+The F1-score, which is the harmonic mean of precision and recall, is 0.75 for the positive class, indicating that the model has a decent balance between precision and recall for this class. The macro-average F1-score is 0.85, which is good but is slightly lower than the weighted average F1-score of 0.91, indicating that the model is better at identifying the majority class (over3h=0) than the minority class (over3h=1).
+
+# 9.4
+Now you know the data quite well. Come up with a research question of interest that can be answered by the data, which could be analytics or visualizations. Perform the needed analyses and answer your question.
+
+What are the most common types of 311 complaints in the city of New York, and how do they vary across different boroughs?
+```{python}
+df_new = df_new.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+
+df_new.dtypes
+```
+To answer this question, we can start by exploring the distribution of complaint types across the entire city. We can use a bar chart to visualize the top 10 most common complaint types:
+```{python}
+import matplotlib.pyplot as plt
+
+complaint_counts = df_new['Complaint Type'].value_counts().nlargest(10)
+plt.bar(complaint_counts.index, complaint_counts.values)
+plt.xticks(rotation=90)
+plt.title('Top 10 Most Common 311 Complaint Types')
+plt.xlabel('Complaint Type')
+plt.ylabel('Count')
+plt.show()
+```
+The output of this code is a bar chart showing the top 10 most common 311 complaint types in the city of New York.
+
+Next, we can explore how these complaint types vary across different boroughs. We can use a stacked bar chart to visualize the distribution of complaint types for each borough:
+```{python}
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+complaints_by_borough = df_new.groupby(['Borough', 'Complaint Type']).size().unstack()
+complaints_by_borough_pivot = complaints_by_borough.div(complaints_by_borough.sum(axis=1), axis=0)
+
+# set the color palette to tab20
+my_palette = sns.color_palette("tab20")
+sns.set_palette(my_palette)
+
+ax = complaints_by_borough_pivot.plot(kind='bar', stacked=True, figsize=(10,8))
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4)
+plt.title('Distribution of Complaint Types by Borough')
+plt.xlabel('Borough')
+```
+The output of this code is a stacked bar chart showing the distribution of complaint types for each borough in the city of New York.
+
+Based on the visualizations, we can make the following observations:
+
+1. The most common complaint type in the city of New York is "illegal parking".
+
+2. Complaint types related to noise, such as "Noise - Residential", "Noise - Street/Sidewalk", and "Noise - Vehicle", are among the top 5 most common complaint types in all boroughs.
+
+3. "Blocked Driveway" is the second most common complaint type in Queens, and is among the top 5 in Brooklyn and the Bronx as well, but is not among the top 5 in Manhattan.
+
+We can perform a statistical test to determine if there is a significant difference in complaint types across different boroughs. One way to do this is by conducting a chi-squared test of independence.
+
+The null hypothesis for the chi-squared test is that there is no association between the borough and the complaint type, and the alternative hypothesis is that there is a significant association.
+
+To perform the test, we can create a contingency table that shows the number of complaints for each combination of borough and complaint type. We can then use the scipy.stats.chi2_contingency function to calculate the chi-squared statistic and p-value. If the p-value is less than the significance level (e.g. 0.05), we reject the null hypothesis and conclude that there is a significant association between the borough and the complaint type.
+```{python}
+from scipy.stats import chi2_contingency
+
+# create a contingency table
+cont_table = pd.crosstab(index=df_new['Borough'], columns=df_new['Complaint Type'])
+
+# perform the chi-squared test
+stat, p_val, dof, expected = chi2_contingency(cont_table)
+
+print(f"Chi-squared statistic: {stat:.2f}")
+print(f"P-value: {p_val:.2f}")
+```
+Based on the output, the p-value is less than 0.05, which means that there is evidence to reject the null hypothesis that the complaint types are the same across all boroughs. Therefore, we can conclude that the complaint types are statistically significant between the different boroughs.
+
+# Sources
+<https://www.analyticsvidhya.com/blog/2016/01/ridge-lasso-regression-python-complete-tutorial/>
+
+<https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html>

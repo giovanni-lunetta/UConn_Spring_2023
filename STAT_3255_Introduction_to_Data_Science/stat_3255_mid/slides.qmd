@@ -1,0 +1,110 @@
+---
+title: "NYC 311 Request Data"
+subtitle: "Data Cleaning"
+author: "Giovanni Lunetta"
+format:
+  revealjs:
+    height: 900
+    width: 1600 
+    embed-resources: true
+    slide-number: true
+#    chalkboard: 
+#      buttons: false
+    preview-links: auto
+#    logo: images/quarto.png
+#    css: styles.css
+    footer: "UConn Intro to Data Science: STAT 3255/5255"
+resources:
+  - demo.pdf
+---
+
+## Outline 
+- In this presentation, we will explore the NYC 311 Requests Data and clean it up for analysis.
+- We will transition back and forth from the presentation to my code in order to see what the coding process looks like.
+
+Here is the outline:
+
++ Introduction
++ Data Cleaning
++ Exploratory Data Analysis
++ Geocoding
++ Conclusion
+
+## 1. Introduction
+- The data ranges from January 15th 2023, January 22, 2023 (one full week).
+- It includes all 311 requests within the given time frame.
+- Due to human input error, the data may look very messy, making it almost impossible to perform any sort of analysis.
+- Therefore we must clean the data. 
+
+## 2 Data Cleaning
+We will start by importing the necessary libraries and loading the data into a pandas dataframe:
+```python
+import pandas as pd
+df = pd.read_csv("nyc311_011523-012123_by022023.csv")
+```
+
+## 2 Data Cleaning (cont.)
+- The first step is almost always looking at the first few rows and columns of our data. 
+- Lets jump over to Jupyter Notebook for the next few steps...
+
+## 2 Data Cleaning (cont.)
+Motivation:
+
++ Geocoding: convert address to geographic coordinates.
++ Reverse Geocoding: convert geographic coordinates to address.
+
+Gathering More Information:
+
++ radius_in_miles
++ population
++ population_density
++ housing_units
++ occupied_housing_units
++ median_home_value
++ median_household_income
+
+## 2 Data Cleaning (cont.)
+Lets look at the interactive geocoded map:
+```{python}
+# import pandas and read in the csv file
+import pandas as pd
+import folium
+from folium.plugins import MarkerCluster
+
+df = pd.read_csv('cleaned_file.csv')
+
+# create a map of NYC
+nyc_map = folium.Map(location=[40.7128, -74.0060], zoom_start=11)
+
+# create a marker cluster layer to group the markers
+marker_cluster = MarkerCluster().add_to(nyc_map)
+
+# iterate over the DataFrame and add markers to the map
+for index, row in df.iterrows():
+    # check if the row has latitude and longitude values
+    if not pd.isnull(row['Latitude']) and not pd.isnull(row['Longitude']):
+        # create a popup message for the marker
+        popup_text = f"Location: {row['Incident Address']}<br>Descriptor: {row['Descriptor']}"
+        # create a marker with the popup message and add it to the marker cluster layer
+        folium.Marker(location=[row['Latitude'], row['Longitude']], popup=popup_text).add_to(marker_cluster)
+
+# display the map
+nyc_map
+```
+
+## 3 Conclusion
+- These were the initial steps to clean the data, throughout the rest of the process, the data will continue to clean but these initial first cleaning steps are vital in any data science project.
+
+Here are a few suggestions to the curator to better collect the data for future uses:
+
+1. There is no need for the 'Agency Name' and the 'Location' columns. These columns are redundant and do not provide any additional information.
+
+2. Secondly, I question as to how it is possible for a close date to be earlier than the created date. I would make the person who is inputting the data reenter when the case was created when they are closing it in order to avoid this issue.
+
+
+## 3 Conclusion (cont.)
+3. My third and overarching suggestion is to not allow someone to enter nothing. Whether it is inputting 'Other' or 'Unspecified' keep it consistent. This can be accomplished by not allowing the person inputting the data to leave an input blank or having the system auto-input one of those two fillers if it is left blank.
+
+4. My fourth suggestion is similar. Columns such as 'Descriptor' have many different forms of 'Other such as 'Other (Explain Below)', 'Other (complaint details)', and 'Other/Unknown'. I understand how this could happen because those who click other have another dropdown area where they fill this in. But, if this is selected, then what they fill in for other must be put into that area, not the choice 'Other (Explain Below)'.
+
+5. Finally, I would make sure everything inputted is either in all lowercase or all uppercase in order to avoid differences in values such as 'Queens' and 'queens'.
